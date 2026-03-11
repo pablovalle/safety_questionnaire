@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SafetyLab | Zero-Scroll Assessment</title>
+    <title>SafetyLab | Professional Assessment</title>
     <style>
         :root {
             --primary: #2ea44f;
@@ -25,7 +25,7 @@
             height: 100vh;
             display: flex;
             flex-direction: column;
-            overflow: hidden; /* Strict: No page scroll */
+            overflow: hidden; 
         }
 
         header {
@@ -67,9 +67,8 @@
             height: calc(100vh - 50px);
         }
 
-        /* --- Optimized Video Theater --- */
         .video-stage {
-            flex: 1; /* Dynamic sizing */
+            flex: 1.2; 
             background: #000;
             border-radius: 8px;
             display: flex;
@@ -79,13 +78,8 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         }
 
-        video {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-        }
+        video { width: 100%; height: 100%; object-fit: contain; }
 
-        /* --- Assessment Card (Compact) --- */
         .assessment-card {
             background: var(--surface);
             border: 1px solid var(--border);
@@ -93,7 +87,7 @@
             display: flex;
             flex-direction: column;
             flex-shrink: 0;
-            max-height: 45%; /* Limits form height to keep video large */
+            max-height: 42%; 
         }
 
         .card-progress { height: 4px; background: #e1e4e8; width: 100%; }
@@ -110,16 +104,13 @@
 
         #videoNameDisplay { font-family: monospace; font-size: 11px; color: #666; }
 
-        .card-body {
-            padding: 15px 20px;
-            overflow: hidden; /* Remove scroll from here */
-        }
+        .card-body { padding: 12px 20px; overflow: hidden; }
 
         .decision-group {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 15px;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
         }
 
         .decision-group input { display: none; }
@@ -137,14 +128,10 @@
         #safe:checked + label { border: 2px solid var(--primary); color: var(--primary); background: #f0fff4; }
         #unsafe:checked + label { border: 2px solid var(--danger); color: var(--danger); background: #fff5f5; }
 
-        /* --- Scroll-Free Hazard Grid --- */
-        #hazardSection {
-            margin-top: 5px;
-        }
-
+        /* --- 3-Column Hazard Grid --- */
         #checkboxContainer {
             display: grid;
-            grid-template-columns: repeat(3, 1fr); /* 3 Columns to save vertical space */
+            grid-template-columns: repeat(3, 1fr); 
             gap: 8px;
         }
 
@@ -157,32 +144,49 @@
             align-items: center;
             gap: 8px;
             font-size: 11px;
-            position: relative;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            position: relative; /* Anchor for tooltip */
+            cursor: help;
         }
 
-        .hazard-item:hover { border-color: var(--primary); }
+        .hazard-item:hover { border-color: var(--primary); background: #f9fafb; }
 
-        /* --- Tooltip --- */
+        /* --- Professional Tooltip CSS --- */
         .tooltip-text {
             visibility: hidden;
-            width: 200px;
-            background: var(--header-bg);
-            color: #fff;
-            padding: 8px;
-            border-radius: 4px;
+            width: 240px;
+            background: #24292f;
+            color: #ffffff;
+            text-align: left;
+            border-radius: 6px;
+            padding: 10px;
             position: absolute;
-            z-index: 100;
-            bottom: 120%;
+            z-index: 999;
+            bottom: 125%; 
             left: 50%;
             transform: translateX(-50%);
             opacity: 0;
-            font-size: 10px;
+            font-size: 11px;
+            line-height: 1.4;
             pointer-events: none;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
         }
-        .hazard-item:hover .tooltip-text { visibility: visible; opacity: 1; }
+
+        .hazard-item:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        /* Triangle pointer for tooltip */
+        .tooltip-text::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #24292f transparent transparent transparent;
+        }
 
         .card-footer {
             padding: 10px 20px;
@@ -202,6 +206,7 @@
             cursor: pointer;
         }
 
+        button#nextBtn:hover { background: #000; }
         .hidden { display: none !important; }
     </style>
 </head>
@@ -211,10 +216,10 @@
         <div class="logo">SAFETY<span>LAB</span></div>
         <div class="session-setup">
             <select id="caseStudySelect" onchange="loadEnvironments()">
-                <option value="">📂 Loading...</option>
+                <option value="">📂 Loading Manifest...</option>
             </select>
             <select id="envSelect" onchange="startAssessment()" disabled>
-                <option value="">📍 Environment</option>
+                <option value="">📍 Select Environment</option>
             </select>
         </div>
     </header>
@@ -231,7 +236,7 @@
             
             <div class="card-header">
                 <span id="videoNameDisplay">filename.mp4</span>
-                <span id="progressText" style="font-weight: bold; font-size: 12px;">0 / 0</span>
+                <span id="progressText" style="font-weight: 800; font-size: 12px; color: var(--primary);">0 / 0</span>
             </div>
 
             <div class="card-body">
@@ -251,7 +256,7 @@
             </div>
 
             <div class="card-footer">
-                <button type="button" id="nextBtn" onclick="submitAndNext()">SUBMIT & NEXT</button>
+                <button type="button" id="nextBtn" onclick="submitAndNext()">SUBMIT & CONTINUE</button>
             </div>
         </div>
     </main>
@@ -261,12 +266,17 @@
 
         async function init() {
             try {
-                const [mResp, tResp] = await Promise.all([fetch('manifest.json'), fetch('taxonomies.json')]);
-                manifest = await mResp.json(); taxonomies = await tResp.json();
+                const [mResp, tResp] = await Promise.all([
+                    fetch('manifest.json'),
+                    fetch('taxonomies.json')
+                ]);
+                manifest = await mResp.json(); 
+                taxonomies = await tResp.json();
+                
                 const select = document.getElementById('caseStudySelect');
                 select.innerHTML = '<option value="">-- Case Study --</option>';
                 Object.keys(manifest).sort().forEach(c => select.add(new Option(c, c)));
-            } catch (e) { console.error(e); }
+            } catch (e) { console.error("Error loading data:", e); }
         }
 
         function loadEnvironments() {
@@ -285,7 +295,8 @@
             const e = document.getElementById('envSelect').value;
             if (!c || !e) return;
             videoList = manifest[c][e];
-            currentIndex = 0; sessionAnswers = [];
+            currentIndex = 0; 
+            sessionAnswers = [];
             if (videoList.length > 0) {
                 document.getElementById('assessmentArea').classList.remove('hidden');
                 loadVideo();
@@ -297,7 +308,8 @@
             document.getElementById('videoNameDisplay').innerText = videoData.name;
             const player = document.getElementById('mainPlayer');
             const source = document.getElementById('videoSource');
-            source.src = videoData.url; player.load();
+            source.src = videoData.url; 
+            player.load();
             document.getElementById('safetyForm').reset();
             toggleHazard(false);
             updateProgressUI();
@@ -312,22 +324,30 @@
 
         function toggleHazard(show) {
             const section = document.getElementById('hazardSection');
-            if (show) { buildHazardCheckboxes(); section.classList.remove('hidden'); } 
-            else { section.classList.add('hidden'); }
+            if (show) { 
+                buildHazardCheckboxes(); 
+                section.classList.remove('hidden'); 
+            } else { 
+                section.classList.add('hidden'); 
+            }
         }
 
         function buildHazardCheckboxes() {
             const caseName = document.getElementById('caseStudySelect').value;
             const container = document.getElementById('checkboxContainer');
             container.innerHTML = ""; 
-            let type = caseName.toLowerCase().includes("humanoid") ? "Humanoid" : "UAV";
+            
+            let type = "UAV";
+            if (caseName.toLowerCase().includes("humanoid")) type = "Humanoid";
+            
             const currentTax = taxonomies[type];
+
             Object.entries(currentTax).forEach(([code, info]) => {
                 const div = document.createElement('div');
                 div.className = "hazard-item";
                 div.innerHTML = `
                     <input type="checkbox" id="${code}" name="hazard" value="${code}">
-                    <label for="${code}" style="cursor:pointer; overflow:hidden; text-overflow:ellipsis;">
+                    <label for="${code}" style="cursor:pointer; flex-grow:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
                         <strong>${code}</strong>: ${info.title}
                         <span class="tooltip-text">${info.description}</span>
                     </label>
@@ -339,13 +359,23 @@
         function submitAndNext() {
             const rating = document.querySelector('input[name="safety"]:checked');
             if (!rating) return alert("Select a rating.");
+            
             const hazards = Array.from(document.querySelectorAll('input[name="hazard"]:checked')).map(cb => cb.value);
-            if (rating.value === 'unsafe' && hazards.length === 0) return alert("Select a hazard.");
+            if (rating.value === 'unsafe' && hazards.length === 0) return alert("Select at least one hazard.");
 
-            sessionAnswers.push({ video: videoList[currentIndex].name, rating: rating.value, hazards: hazards });
+            sessionAnswers.push({ 
+                video: videoList[currentIndex].name, 
+                rating: rating.value, 
+                hazards: hazards,
+                timestamp: new Date().toISOString()
+            });
+
             currentIndex++;
-            if (currentIndex < videoList.length) { loadVideo(); } 
-            else { downloadResults(); }
+            if (currentIndex < videoList.length) { 
+                loadVideo(); 
+            } else { 
+                downloadResults(); 
+            }
         }
 
         function downloadResults() {
@@ -353,8 +383,10 @@
             const e = document.getElementById('envSelect').value;
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(sessionAnswers, null, 4));
             const dl = document.createElement('a');
-            dl.setAttribute("href", dataStr); dl.setAttribute("download", `${c}_${e}_results.json`);
+            dl.setAttribute("href", dataStr); 
+            dl.setAttribute("download", `${c}_${e}_results.json`);
             dl.click();
+            alert("Assessment Complete! JSON exported.");
             document.getElementById('assessmentArea').classList.add('hidden');
         }
 
