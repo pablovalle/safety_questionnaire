@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SafetyLab Assessment</title>
+    <title>SafetyLab | Video Assessment Pro</title>
     <style>
         :root {
             --primary: #2ea44f;
@@ -11,10 +11,11 @@
             --bg: #ffffff;
             --surface: #f6f8fa;
             --border: #d0d7de;
-            --text: #24292f;
+            --text: #1b1f24;
+            --header-bg: #24292f;
         }
 
-        * { box-sizing: border-box; transition: all 0.2s ease-out; }
+        * { box-sizing: border-box; transition: all 0.2s ease; }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -24,160 +25,203 @@
             height: 100vh;
             display: flex;
             flex-direction: column;
-            overflow: hidden; 
+            overflow: hidden;
         }
 
-        /* --- Progress Bar --- */
-        .progress-container {
-            width: 100%;
-            height: 6px;
-            background: #eee;
-            position: fixed;
-            top: 0;
-            z-index: 1000;
+        /* --- Header & Navigation --- */
+        header {
+            background: var(--header-bg);
+            color: white;
+            padding: 0 2rem;
+            height: 60px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            flex-shrink: 0;
         }
 
-        #progressBar {
-            height: 100%;
-            width: 0%;
-            background: var(--primary);
-            box-shadow: 0 0 8px rgba(46, 164, 79, 0.5);
-            transition: width 0.4s ease;
+        .logo { font-weight: 800; font-size: 20px; letter-spacing: -0.5px; }
+        .logo span { color: var(--primary); }
+
+        .session-setup {
+            display: flex;
+            gap: 15px;
+            align-items: center;
         }
 
+        select {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-size: 13px;
+            outline: none;
+            cursor: pointer;
+        }
+        select option { color: black; }
+        select:hover { background: rgba(255,255,255,0.2); }
+        select:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* --- Main Layout --- */
         main {
             flex-grow: 1;
             display: flex;
             flex-direction: column;
-            padding: 40px 20px 20px 20px;
-            max-width: 1100px;
+            padding: 20px;
+            max-width: 1200px;
             margin: 0 auto;
             width: 100%;
+            gap: 20px;
+            overflow: hidden;
         }
 
-        .header-nav {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-
-        .selectors { display: flex; gap: 10px; }
-
-        select {
-            padding: 8px 12px;
-            border-radius: 6px;
-            border: 1px solid var(--border);
-            background: var(--surface);
-            font-size: 13px;
-        }
-
-        /* --- Video Section --- */
-        .video-section {
-            flex: 0 1 auto;
+        /* --- Video Theater (No Cropping) --- */
+        .video-stage {
+            flex: 1.5; 
             background: #000;
             border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            margin-bottom: 15px;
             display: flex;
+            align-items: center;
             justify-content: center;
-            height: 40vh; 
+            overflow: hidden;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            position: relative;
+            border: 1px solid var(--border);
         }
 
-        video { height: 100%; width: auto; background: #000; }
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain; /* Professional fit: no cropping */
+            display: block;
+        }
 
-        /* --- Assessment Section --- */
+        /* --- Assessment Card --- */
         .assessment-card {
             background: var(--surface);
             border: 1px solid var(--border);
             border-radius: 12px;
-            padding: 20px;
             display: flex;
             flex-direction: column;
-            flex-grow: 1;
+            flex: 1;
+            min-height: 0; /* Important for inner scroll */
             overflow: hidden;
         }
 
-        .meta-info {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 15px;
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 10px;
+        .card-progress {
+            height: 5px;
+            background: #e1e4e8;
+            width: 100%;
+        }
+        #progressBar {
+            height: 100%;
+            width: 0%;
+            background: var(--primary);
+            transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
+        .card-header {
+            padding: 12px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            background: #fff;
+        }
+
+        #videoNameDisplay { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, monospace; font-size: 12px; color: #57606a; }
+
+        .card-body {
+            padding: 20px 25px;
+            flex-grow: 1;
+            overflow-y: auto; /* Scroll only the form if needed */
+        }
+
+        /* --- Decision UI --- */
         .decision-group {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 15px;
+            gap: 20px;
+            margin-bottom: 20px;
         }
 
         .decision-group input { display: none; }
         .decision-group label {
-            padding: 14px;
+            padding: 16px;
             text-align: center;
-            border: 2px solid var(--border);
-            border-radius: 8px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
             cursor: pointer;
-            font-weight: 600;
+            font-weight: 700;
             background: #fff;
+            font-size: 14px;
+            letter-spacing: 0.5px;
         }
 
-        #safe:checked + label { border-color: var(--primary); color: var(--primary); background: #f0fff4; }
-        #unsafe:checked + label { border-color: var(--danger); color: var(--danger); background: #fff5f5; }
+        .decision-group label:hover { border-color: #888; }
 
-        /* --- Hazards Grid --- */
+        #safe:checked + label { border: 2px solid var(--primary); color: var(--primary); background: #f0fff4; }
+        #unsafe:checked + label { border: 2px solid var(--danger); color: var(--danger); background: #fff5f5; }
+
+        /* --- Hazard Grid --- */
         #hazardSection {
-            flex-grow: 1;
-            overflow-y: auto;
-            margin-bottom: 15px;
-        }
-
-        #checkboxContainer {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 10px;
+            margin-top: 10px;
+            padding-bottom: 20px;
         }
 
         .hazard-item {
             background: #fff;
-            padding: 10px;
+            padding: 10px 14px;
             border: 1px solid var(--border);
-            border-radius: 6px;
+            border-radius: 8px;
             display: flex;
-            align-items: flex-start;
-            gap: 10px;
+            align-items: center;
+            gap: 12px;
             font-size: 13px;
             position: relative;
+            cursor: help;
         }
 
-        .hazard-label { cursor: pointer; flex-grow: 1; }
+        .hazard-item:hover { border-color: var(--primary); background: #f6f8fa; }
 
         /* --- Tooltip --- */
         .tooltip-text {
             visibility: hidden;
-            width: 220px;
-            background: #24292f;
+            width: 240px;
+            background: var(--header-bg);
             color: #fff;
-            padding: 8px;
-            border-radius: 6px;
+            padding: 10px;
+            border-radius: 8px;
             position: absolute;
             z-index: 100;
-            bottom: 110%;
+            bottom: 125%;
             left: 50%;
             transform: translateX(-50%);
             opacity: 0;
             font-size: 11px;
+            line-height: 1.4;
             pointer-events: none;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
         }
         .hazard-item:hover .tooltip-text { visibility: visible; opacity: 1; }
+
+        /* --- Footer --- */
+        .card-footer {
+            padding: 15px 25px;
+            background: #fff;
+            border-top: 1px solid var(--border);
+            flex-shrink: 0;
+        }
 
         button#nextBtn {
             width: 100%;
             padding: 16px;
-            background: var(--text);
+            background: var(--header-bg);
             color: white;
             border: none;
             border-radius: 8px;
@@ -186,54 +230,66 @@
             cursor: pointer;
         }
 
-        button#nextBtn:hover { background: #000; }
+        button#nextBtn:hover { background: #000; transform: translateY(-1px); }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+
         .hidden { display: none !important; }
+
+        /* Custom Scrollbar */
+        .card-body::-webkit-scrollbar { width: 6px; }
+        .card-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+
     </style>
 </head>
 <body>
 
-    <div class="progress-container"><div id="progressBar"></div></div>
+    <header>
+        <div class="logo">SAFETY<span>LAB</span></div>
+        <div class="session-setup">
+            <select id="caseStudySelect" onchange="loadEnvironments()">
+                <option value="">📂 Loading Manifest...</option>
+            </select>
+            <select id="envSelect" onchange="startAssessment()" disabled>
+                <option value="">📍 Select Environment</option>
+            </select>
+        </div>
+    </header>
 
     <main>
-        <div class="header-nav">
-            <div style="font-weight: 800; font-size: 18px;">SAFETY<span style="color:var(--primary)">LAB</span></div>
-            <div class="selectors">
-                <select id="caseStudySelect" onchange="loadEnvironments()">
-                    <option value="">Loading Manifest...</option>
-                </select>
-                <select id="envSelect" onchange="startAssessment()" disabled>
-                    <option value="">Select Environment</option>
-                </select>
-            </div>
-        </div>
-
-        <div class="video-section">
+        <div class="video-stage">
             <video id="mainPlayer" controls playsinline>
                 <source id="videoSource" src="" type="video/mp4">
             </video>
         </div>
 
         <div id="assessmentArea" class="assessment-card hidden">
-            <div class="meta-info">
-                <span id="videoNameDisplay" style="font-weight: 600; font-size: 14px;">filename.mp4</span>
-                <span id="progressText" style="font-size: 12px; color: #666;">Video 0/0</span>
+            <div class="card-progress"><div id="progressBar"></div></div>
+            
+            <div class="card-header">
+                <span id="videoNameDisplay">filename.mp4</span>
+                <span id="progressText" style="font-weight: 800; font-size: 13px; color: var(--primary);">0 / 0</span>
             </div>
 
-            <form id="safetyForm" style="display:contents">
-                <div class="decision-group">
-                    <input type="radio" id="safe" name="safety" value="safe" onclick="toggleHazard(false)">
-                    <label for="safe">SAFE</label>
-                    
-                    <input type="radio" id="unsafe" name="safety" value="unsafe" onclick="toggleHazard(true)">
-                    <label for="unsafe">UNSAFE</label>
-                </div>
+            <div class="card-body">
+                <form id="safetyForm" style="display:contents">
+                    <div class="decision-group">
+                        <input type="radio" id="safe" name="safety" value="safe" onclick="toggleHazard(false)">
+                        <label for="safe">SAFE</label>
+                        
+                        <input type="radio" id="unsafe" name="safety" value="unsafe" onclick="toggleHazard(true)">
+                        <label for="unsafe">UNSAFE</label>
+                    </div>
 
-                <div id="hazardSection" class="hidden">
-                    <div id="checkboxContainer"></div>
-                </div>
+                    <div id="hazardSection" class="hidden">
+                        <p style="font-size: 11px; font-weight: bold; color: #888; margin-bottom: 10px; text-transform: uppercase;">Primary Hazard Categories:</p>
+                        <div id="checkboxContainer"></div>
+                    </div>
+                </form>
+            </div>
 
-                <button type="button" id="nextBtn" onclick="submitAndNext()">SUBMIT & NEXT</button>
-            </form>
+            <div class="card-footer">
+                <button type="button" id="nextBtn" onclick="submitAndNext()">SUBMIT & CONTINUE</button>
+            </div>
         </div>
     </main>
 
@@ -244,25 +300,26 @@
         let currentIndex = 0;
         let sessionAnswers = [];
 
+        // 1. Initialize data
         async function init() {
             try {
-                // Load Manifest
-                const mResp = await fetch('manifest.json');
+                const [mResp, tResp] = await Promise.all([
+                    fetch('manifest.json'),
+                    fetch('taxonomies.json')
+                ]);
                 manifest = await mResp.json();
-                
-                // Load Taxonomy
-                const tResp = await fetch('taxonomies.json');
                 taxonomies = await tResp.json();
 
                 const select = document.getElementById('caseStudySelect');
                 select.innerHTML = '<option value="">-- Choose Case Study --</option>';
                 Object.keys(manifest).sort().forEach(c => select.add(new Option(c, c)));
             } catch (e) {
-                console.error("Initialization Error:", e);
-                document.getElementById('caseStudySelect').innerHTML = '<option>Error loading JSON</option>';
+                console.error("Critical error loading JSON data:", e);
+                document.getElementById('caseStudySelect').innerHTML = '<option>Error loading files</option>';
             }
         }
 
+        // 2. Populate Environments
         function loadEnvironments() {
             const caseName = document.getElementById('caseStudySelect').value;
             const envSelect = document.getElementById('envSelect');
@@ -272,9 +329,12 @@
             if (caseName && manifest[caseName]) {
                 envSelect.disabled = false;
                 Object.keys(manifest[caseName]).sort().forEach(e => envSelect.add(new Option(e, e)));
+            } else {
+                envSelect.disabled = true;
             }
         }
 
+        // 3. Setup Video Queue
         function startAssessment() {
             const c = document.getElementById('caseStudySelect').value;
             const e = document.getElementById('envSelect').value;
@@ -290,6 +350,7 @@
             }
         }
 
+        // 4. Load Video to Player
         function loadVideo() {
             const videoData = videoList[currentIndex];
             document.getElementById('videoNameDisplay').innerText = videoData.name;
@@ -305,15 +366,17 @@
             updateProgressUI();
         }
 
+        // 5. Update UI Stats
         function updateProgressUI() {
             const total = videoList.length;
             const current = currentIndex + 1;
             const percent = (currentIndex / total) * 100;
             
             document.getElementById('progressBar').style.width = percent + '%';
-            document.getElementById('progressText').innerText = `Video ${current} / ${total}`;
+            document.getElementById('progressText').innerText = `${current} / ${total}`;
         }
 
+        // 6. Hazard UI Logic
         function toggleHazard(show) {
             const section = document.getElementById('hazardSection');
             if (show) {
@@ -329,7 +392,10 @@
             const container = document.getElementById('checkboxContainer');
             container.innerHTML = ""; 
 
-            let type = caseName.toLowerCase().includes("humanoid") ? "Humanoid" : "UAV";
+            // Logic to switch between UAV and Humanoid
+            let type = "UAV";
+            if (caseName.toLowerCase().includes("humanoid")) type = "Humanoid";
+            
             const currentTax = taxonomies[type];
 
             Object.entries(currentTax).forEach(([code, info]) => {
@@ -337,7 +403,7 @@
                 div.className = "hazard-item";
                 div.innerHTML = `
                     <input type="checkbox" id="${code}" name="hazard" value="${code}">
-                    <label for="${code}" class="hazard-label">
+                    <label for="${code}" style="cursor:pointer; flex-grow:1;">
                         <strong>${code}</strong>: ${info.title}
                         <span class="tooltip-text">${info.description}</span>
                     </label>
@@ -346,15 +412,19 @@
             });
         }
 
+        // 7. Data Collection
         function submitAndNext() {
             const selectedRating = document.querySelector('input[name="safety"]:checked');
             if (!selectedRating) { alert("Please select a safety rating."); return; }
 
             const checkedHazards = Array.from(document.querySelectorAll('input[name="hazard"]:checked')).map(cb => cb.value);
+            
             if (selectedRating.value === 'unsafe' && checkedHazards.length === 0) {
-                alert("Please select at least one hazard."); return;
+                alert("Please select at least one hazard category for unsafe videos."); 
+                return;
             }
 
+            // Save record
             sessionAnswers.push({
                 video: videoList[currentIndex].name,
                 rating: selectedRating.value,
@@ -366,21 +436,23 @@
             if (currentIndex < videoList.length) {
                 loadVideo();
             } else {
-                // Final Progress update before download
                 document.getElementById('progressBar').style.width = '100%';
                 downloadResults();
             }
         }
 
+        // 8. Result Export
         function downloadResults() {
             const caseName = document.getElementById('caseStudySelect').value;
             const envName = document.getElementById('envSelect').value;
+            
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(sessionAnswers, null, 4));
             const dlAnchor = document.createElement('a');
             dlAnchor.setAttribute("href", dataStr);
             dlAnchor.setAttribute("download", `${caseName}_${envName}_results.json`);
             dlAnchor.click();
-            alert("Done! Results downloaded.");
+            
+            alert("Assessment Complete! The JSON results file has been generated.");
             document.getElementById('assessmentArea').classList.add('hidden');
         }
 
