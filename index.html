@@ -3,108 +3,226 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Safety Assessment Form</title>
+    <title>Safety Assessment Dashboard</title>
     <style>
-        body { font-family: system-ui, sans-serif; max-width: 800px; margin: 20px auto; padding: 20px; line-height: 1.6; }
-        .selector-group { background: #f4f4f4; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #ddd; }
-        select { width: 100%; padding: 10px; margin: 10px 0; border-radius: 4px; border: 1px solid #ccc; }
-        .assessment-item { border: 1px solid #ddd; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        video { background: #000; border-radius: 4px; margin: 15px 0; display: block; }
-        .hidden { display: none; }
-        .controls { margin-top: 20px; display: flex; justify-content: space-between; }
-        button { padding: 12px 24px; cursor: pointer; background: #2ea44f; color: white; border: none; border-radius: 6px; font-weight: bold; }
-        button:hover { background: #2c974b; }
-        button:disabled { background: #ccc; cursor: not-allowed; }
-        .radio-group { margin: 15px 0; padding: 10px; border-left: 4px solid #2ea44f; background: #f9f9f9; }
+        :root {
+            --primary: #2ea44f;
+            --bg: #f6f8fa;
+            --card: #ffffff;
+            --text: #24292f;
+            --border: #d0d7de;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden; /* Critical: No page scroll */
+        }
+
+        header {
+            padding: 1rem 2rem;
+            background: var(--card);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        main {
+            display: grid;
+            grid-template-columns: 1fr 400px; /* Video left, Form right */
+            gap: 0;
+            flex-grow: 1;
+            height: calc(100vh - 70px);
+        }
+
+        /* --- Left Side: Video & Nav --- */
+        .video-side {
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            border-right: 1px solid var(--border);
+            background: #fff;
+        }
+
+        .nav-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        select {
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            font-size: 14px;
+            background-color: #f9f9f9;
+        }
+
+        .video-wrapper {
+            background: #000;
+            border-radius: 8px;
+            overflow: hidden;
+            aspect-ratio: 16 / 9;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        video { width: 100%; max-height: 100%; }
+
+        /* --- Right Side: Assessment --- */
+        .form-side {
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            background: var(--bg);
+        }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        #progressCounter { font-size: 12px; color: #666; text-transform: uppercase; letter-spacing: 1px; }
+        h3 { margin: 0.5rem 0 1.5rem 0; font-size: 1.1rem; }
+
+        .radio-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 2rem;
+        }
+
+        .radio-buttons input { display: none; }
+        .radio-buttons label {
+            flex: 1;
+            padding: 12px;
+            text-align: center;
+            border: 2px solid var(--border);
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        #safe:checked + label { border-color: var(--primary); background: #e6ffec; color: var(--primary); }
+        #unsafe:checked + label { border-color: #cf222e; background: #ffebe9; color: #cf222e; }
+
+        /* Hazards List with internal scroll if too long */
+        #hazardSection {
+            flex-grow: 1;
+            overflow-y: auto;
+            margin-bottom: 1.5rem;
+            padding-right: 10px;
+        }
+
         .hazard-item {
-            margin: 8px 0;
             position: relative;
+            padding: 8px;
+            margin-bottom: 5px;
+            border-radius: 4px;
+            border: 1px solid transparent;
             cursor: help;
         }
-        
-        .hazard-label {
-            padding: 4px 8px;
-            border-radius: 4px;
-            transition: background 0.2s;
-        }
-        
-        .hazard-label:hover {
-            background: #fff;
-            text-decoration: underline dotted #666;
-        }
-        
-        /* Tooltip container */
-        .hazard-item .tooltip-text {
+        .hazard-item:hover { background: #f0f3f6; border-color: var(--border); }
+
+        /* Custom Tooltip */
+        .tooltip-text {
             visibility: hidden;
-            width: 250px;
-            background-color: #333;
+            width: 200px;
+            background: #24292f;
             color: #fff;
-            text-align: center;
-            border-radius: 6px;
             padding: 8px;
+            border-radius: 6px;
             position: absolute;
-            z-index: 10;
-            bottom: 125%; /* Position above the text */
-            left: 50%;
-            margin-left: -125px;
+            z-index: 100;
+            right: 105%;
+            top: 0;
+            font-size: 12px;
             opacity: 0;
             transition: opacity 0.3s;
-            font-size: 0.85em;
-            font-weight: normal;
-            pointer-events: none;
         }
-        
-        .hazard-item:hover .tooltip-text {
-            visibility: visible;
-            opacity: 1;
+        .hazard-item:hover .tooltip-text { visibility: visible; opacity: 1; }
+
+        button#nextBtn {
+            width: 100%;
+            padding: 14px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
         }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .hidden { display: none; }
     </style>
 </head>
 <body>
 
-    <h2>Video Safety Assessment</h2>
+    <header>
+        <div style="font-weight: bold; font-size: 1.2rem;">SafetyLab <span style="font-weight: normal; color: #666;">| Video Assessment</span></div>
+        <div id="fileStatus" style="font-size: 0.9rem; color: var(--primary);">● System Ready</div>
+    </header>
 
-    <div class="selector-group">
-        <label><strong>1. Select Case Study</strong></label>
-        <select id="caseStudySelect" onchange="loadEnvironments()">
-            <option value="">Loading manifest...</option>
-        </select>
-
-        <label><strong>2. Select Environment</strong></label>
-        <select id="envSelect" onchange="startAssessment()" disabled>
-            <option value="">Select a Case Study first</option>
-        </select>
-    </div>
-
-    <div id="assessmentArea" class="assessment-item hidden">
-        <h3 id="videoNameDisplay">Loading Video...</h3>
-        <p id="progressCounter" style="font-size: 0.9em; color: #666; font-weight: bold;"></p>
-        
-        <video id="mainPlayer" width="100%" controls playsinline controlsList="nodownload">
-            <source id="videoSource" src="" type="video/mp4">
-            Your browser does not support the video tag.
-        </video>
-
-        <form id="safetyForm">
-            <p><strong>How safe is this video content?</strong></p>
-            <div class="radio-group">
-                <input type="radio" id="safe" name="safety" value="safe" onclick="toggleHazard(false)">
-                <label for="safe">✅ Safe</label><br>
-                <input type="radio" id="unsafe" name="safety" value="unsafe" onclick="toggleHazard(true)">
-                <label for="unsafe">⚠️ Unsafe</label>
+    <main>
+        <section class="video-side">
+            <div class="nav-controls">
+                <select id="caseStudySelect" onchange="loadEnvironments()">
+                    <option value="">Case Study</option>
+                </select>
+                <select id="envSelect" onchange="startAssessment()" disabled>
+                    <option value="">Environment</option>
+                </select>
             </div>
-        
-            <div id="hazardSection" class="hidden" style="margin-top:15px; padding:15px; background:#fff3cd; border-radius:5px; border: 1px solid #ffeeba;">
-                <p><strong>Select all applicable Hazard Categories:</strong></p>
-                <div id="checkboxContainer"></div>
-            </div>
-            
-            <div class="controls">
-                <button type="button" id="nextBtn" onclick="submitAndNext()">Submit & Next Video</button>
-            </div>
-        </form>
-    </div>
 
+            <div class="video-wrapper">
+                <video id="mainPlayer" controls playsinline controlsList="nodownload">
+                    <source id="videoSource" src="" type="video/mp4">
+                </video>
+            </div>
+            <div id="videoMeta" style="color: #666; font-size: 14px;">Select a folder to begin analysis.</div>
+        </section>
+
+        <section class="form-side">
+            <div id="assessmentArea" class="card hidden">
+                <div id="progressCounter">Loading...</div>
+                <h3 id="videoNameDisplay">Filename.mp4</h3>
+
+                <form id="safetyForm">
+                    <div class="radio-buttons">
+                        <input type="radio" id="safe" name="safety" value="safe" onclick="toggleHazard(false)">
+                        <label for="safe">SAFE</label>
+                        
+                        <input type="radio" id="unsafe" name="safety" value="unsafe" onclick="toggleHazard(true)">
+                        <label for="unsafe">UNSAFE</label>
+                    </div>
+
+                    <div id="hazardSection" class="hidden">
+                        <p style="font-size: 13px; font-weight: bold; color: #555; margin-bottom: 10px;">IDENTIFIED HAZARDS:</p>
+                        <div id="checkboxContainer"></div>
+                    </div>
+
+                    <button type="button" id="nextBtn" onclick="submitAndNext()">SUBMIT & NEXT</button>
+                </form>
+            </div>
+        </section>
+    </main>
     <script>
         let manifest = {}; 
         let videoList = [];
@@ -266,21 +384,28 @@
             const container = document.getElementById('checkboxContainer');
             container.innerHTML = ""; 
         
+            // Determine taxonomy type
             let type = "UAV"; 
             if (caseName.toLowerCase().includes("humanoid")) type = "Humanoid";
         
             const currentTax = taxonomies[type];
         
+            if (!currentTax) return;
+        
             Object.entries(currentTax).forEach(([code, info]) => {
                 const div = document.createElement('div');
                 div.className = "hazard-item";
                 
+                // We wrap the input and text in a way that the whole area 
+                // feels interactive and supports the tooltip positioning.
                 div.innerHTML = `
-                    <input type="checkbox" id="${code}" name="hazard" value="${code}">
-                    <label for="${code}" class="hazard-label">
-                        <strong>${code}:</strong> ${info.title}
-                        <span class="tooltip-text">${info.description}</span>
-                    </label>
+                    <div style="display: flex; align-items: flex-start; gap: 10px;">
+                        <input type="checkbox" id="${code}" name="hazard" value="${code}" style="margin-top: 4px;">
+                        <label for="${code}" class="hazard-label" style="flex-grow: 1; font-size: 14px; cursor: pointer;">
+                            <strong>${code}</strong> — ${info.title}
+                            <span class="tooltip-text">${info.description}</span>
+                        </label>
+                    </div>
                 `;
                 container.appendChild(div);
             });
