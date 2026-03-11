@@ -1,16 +1,144 @@
-<div class="assessment-item">
-  <h3>Video 1 Assessment</h3>
-  
-  <video width="100%" max-width="800" controls playsinline controlsList="nodownload">
-  <source src="https://www.dropbox.com/scl/fi/ne2xxauqyl4ahlbprkzxf/video_uav_arrasate_1.mp4?rlkey=6i5kd10l4uae7uzt6pvbj0loa&st=f1voxbw2&raw=1" type="video/mp4">
-  Your browser does not support the video tag.
-</video>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Safety Assessment Form</title>
+    <style>
+        body { font-family: system-ui, sans-serif; max-width: 800px; margin: 20px auto; padding: 20px; line-height: 1.6; }
+        .selector-group { background: #f4f4f4; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+        select { width: 100%; padding: 8px; margin: 10px 0; }
+        .assessment-item { border: 1px solid #ddd; padding: 20px; border-radius: 8px; }
+        video { background: #000; border-radius: 4px; margin: 15px 0; }
+        .hidden { display: none; }
+        .controls { margin-top: 20px; display: flex; justify-content: space-between; }
+        button { padding: 10px 20px; cursor: pointer; background: #2ea44f; color: white; border: none; border-radius: 6px; font-weight: bold; }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+    </style>
+</head>
+<body>
 
-  <form>
-    <p>How safe is this video content?</p>
-    <input type="radio" id="safe" name="safety" value="safe">
-    <label for="safe">Safe</label><br>
-    <input type="radio" id="unsafe" name="safety" value="unsafe">
-    <label for="unsafe">Unsafe</label>
-  </form>
-</div>
+    <h2>Video Safety Assessment</h2>
+
+    <div class="selector-group">
+        <label><strong>1. Select Case Study (Root Folder)</strong></label>
+        <select id="caseStudySelect" onchange="loadEnvironments()">
+            <option value="">Loading folders...</option>
+        </select>
+
+        <label><strong>2. Select Environment (Sub-folder)</strong></label>
+        <select id="envSelect" onchange="startAssessment()" disabled>
+            <option value="">Select a Case Study first</option>
+        </select>
+    </div>
+
+    <div id="assessmentArea" class="assessment-item hidden">
+        <h3 id="videoNameDisplay">Loading Video...</h3>
+        <p id="progressCounter" style="font-size: 0.9em; color: #666;"></p>
+        
+        <video id="mainPlayer" width="100%" controls playsinline controlsList="nodownload">
+            <source id="videoSource" src="" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+
+        <form id="safetyForm">
+            <p><strong>How safe is this video content?</strong></p>
+            <input type="radio" id="safe" name="safety" value="safe">
+            <label for="safe">Safe</label><br>
+            <input type="radio" id="unsafe" name="safety" value="unsafe">
+            <label for="unsafe">Unsafe</label>
+            
+            <div class="controls">
+                <button type="button" id="nextBtn" onclick="submitAndNext()">Submit & Next Video</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        const USER = 'pablovalle';
+        const REPO = 'safety_questionnaire';
+        let videoList = [];
+        let currentIndex = 0;
+
+        // Fetch Case Studies on load
+        async function fetchFolders(path = "") {
+            const response = await fetch(`https://api.github.com/repos/${USER}/${REPO}/contents/${path}`);
+            return await response.json();
+        }
+
+        async function init() {
+            const data = await fetchFolders();
+            const select = document.getElementById('caseStudySelect');
+            select.innerHTML = '<option value="">-- Choose Case Study --</option>';
+            data.filter(item => item.type === 'dir' && !item.name.startsWith('.')).forEach(folder => {
+                select.add(new Option(folder.name, folder.path));
+            });
+        }
+
+        async function loadEnvironments() {
+            const path = document.getElementById('caseStudySelect').value;
+            if (!path) return;
+            
+            const data = await fetchFolders(path);
+            const envSelect = document.getElementById('envSelect');
+            envSelect.innerHTML = '<option value="">-- Choose Environment --</option>';
+            envSelect.disabled = false;
+
+            data.filter(item => item.type === 'dir').forEach(folder => {
+                envSelect.add(new Option(folder.name, folder.path));
+            });
+        }
+
+        async function startAssessment() {
+            const path = document.getElementById('envSelect').value;
+            if (!path) return;
+
+            const data = await fetchFolders(path);
+            // Filter for mp4s only
+            videoList = data.filter(item => item.name.toLowerCase().endswith('.mp4') || item.name.toLowerCase().endsWith('.mov'));
+            currentIndex = 0;
+
+            if (videoList.length > 0) {
+                document.getElementById('assessmentArea').classList.remove('hidden');
+                loadVideo();
+            } else {
+                alert("No videos found in this folder.");
+            }
+        }
+
+        function loadVideo() {
+            const video = videoList[currentIndex];
+            document.getElementById('videoNameDisplay').innerText = video.name;
+            document.getElementById('progressCounter').innerText = `Video ${currentIndex + 1} of ${videoList.length}`;
+            
+            const player = document.getElementById('mainPlayer');
+            const source = document.getElementById('videoSource');
+            
+            source.src = video.download_url; // Direct raw link from GitHub API
+            player.load();
+            document.getElementById('safetyForm').reset();
+        }
+
+        function submitAndNext() {
+            const selected = document.querySelector('input[name="safety"]:checked');
+            if (!selected) {
+                alert("Please select a safety rating before proceeding.");
+                return;
+            }
+
+            // TODO: Add code here to send (video.name + selected.value) to Google Sheets/Form
+            console.log(`Saved: ${videoList[currentIndex].name} is ${selected.value}`);
+
+            currentIndex++;
+            if (currentIndex < videoList.length) {
+                loadVideo();
+            } else {
+                alert("Assessment complete for this folder!");
+                document.getElementById('assessmentArea').classList.add('hidden');
+            }
+        }
+
+        init();
+    </script>
+</body>
+</html>
