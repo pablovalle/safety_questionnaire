@@ -1,0 +1,46 @@
+{
+    "UAV": {
+      "H1": {
+        "title": "Static obstacle hazards",
+        "description": "Risk of collision with stationary structures like trees, walls, buildings, poles, or ceilings."
+      },
+      "H2": {
+        "title": "Dynamic object hazards",
+        "description": "Risk due to moving entities such as humans, animals, vehicles, or other UAVs."
+      },
+      "H3": {
+        "title": "Entanglement hazards",
+        "description": "Objects that may trap propellers: wires, power lines, cables, nets, or thin branches."
+      },
+      "H4": {
+        "title": "Environmental hazards",
+        "description": "Conditions impairing safe flight: dense fog, smoke, dust, darkness, or heavy clutter."
+      },
+      "H5": {
+        "title": "Navigation corridor hazards",
+        "description": "Operating in constrained spaces: narrow corridors, indoor hallways, or tight gaps."
+      }
+    },
+    "Humanoid": {
+        "H1": {
+          "title": "Static obstacle hazards",
+          "description": "Risk of collision with stationary structures like trees, walls, buildings, poles, or ceilings."
+        },
+        "H2": {
+          "title": "Dynamic object hazards",
+          "description": "Risk due to moving entities such as humans, animals, vehicles, or other UAVs."
+        },
+        "H3": {
+          "title": "Entanglement hazards",
+          "description": "Objects that may trap propellers: wires, power lines, cables, nets, or thin branches."
+        },
+        "H4": {
+          "title": "Environmental hazards",
+          "description": "Conditions impairing safe flight: dense fog, smoke, dust, darkness, or heavy clutter."
+        },
+        "H5": {
+          "title": "Navigation corridor hazards",
+          "description": "Operating in constrained spaces: narrow corridors, indoor hallways, or tight gaps."
+        }
+      }
+}

@@ -16,6 +16,48 @@
         button:hover { background: #2c974b; }
         button:disabled { background: #ccc; cursor: not-allowed; }
         .radio-group { margin: 15px 0; padding: 10px; border-left: 4px solid #2ea44f; background: #f9f9f9; }
+        .hazard-item {
+            margin: 8px 0;
+            position: relative;
+            cursor: help;
+        }
+        
+        .hazard-label {
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+        
+        .hazard-label:hover {
+            background: #fff;
+            text-decoration: underline dotted #666;
+        }
+        
+        /* Tooltip container */
+        .hazard-item .tooltip-text {
+            visibility: hidden;
+            width: 250px;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 8px;
+            position: absolute;
+            z-index: 10;
+            bottom: 125%; /* Position above the text */
+            left: 50%;
+            margin-left: -125px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 0.85em;
+            font-weight: normal;
+            pointer-events: none;
+        }
+        
+        .hazard-item:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+        }
     </style>
 </head>
 <body>
@@ -46,10 +88,15 @@
         <form id="safetyForm">
             <p><strong>How safe is this video content?</strong></p>
             <div class="radio-group">
-                <input type="radio" id="safe" name="safety" value="safe">
+                <input type="radio" id="safe" name="safety" value="safe" onclick="toggleHazard(false)">
                 <label for="safe">✅ Safe</label><br>
-                <input type="radio" id="unsafe" name="safety" value="unsafe">
+                <input type="radio" id="unsafe" name="safety" value="unsafe" onclick="toggleHazard(true)">
                 <label for="unsafe">⚠️ Unsafe</label>
+            </div>
+        
+            <div id="hazardSection" class="hidden" style="margin-top:15px; padding:15px; background:#fff3cd; border-radius:5px; border: 1px solid #ffeeba;">
+                <p><strong>Select all applicable Hazard Categories:</strong></p>
+                <div id="checkboxContainer"></div>
             </div>
             
             <div class="controls">
@@ -64,17 +111,90 @@
         let currentIndex = 0;
         let sessionAnswers = []; // Array to store the results
 
+        let taxonomies = {}; // Loaded from taxonomies.json
+
         async function init() {
-            try {
-                const response = await fetch('manifest.json');
-                manifest = await response.json();
-                const select = document.getElementById('caseStudySelect');
-                select.innerHTML = '<option value="">-- Choose Case Study --</option>';
-                Object.keys(manifest).sort().forEach(caseName => {
-                    select.add(new Option(caseName, caseName));
-                });
-            } catch (error) {
-                console.error("Error loading manifest:", error);
+            // Load both manifests and taxonomies
+            const manifestResp = await fetch('manifest.json');
+            manifest = await manifestResp.json();
+            
+            const taxResp = await fetch('taxonomies.json');
+            taxonomies = await taxResp.json();
+
+            const select = document.getElementById('caseStudySelect');
+            select.innerHTML = '<option value="">-- Choose Case Study --</option>';
+            Object.keys(manifest).sort().forEach(caseName => {
+                select.add(new Option(caseName, caseName));
+            });
+        }
+
+        function toggleHazard(show) {
+            const section = document.getElementById('hazardSection');
+            if (show) {
+                buildHazardCheckboxes();
+                section.classList.remove('hidden');
+            } else {
+                section.classList.add('hidden');
+            }
+        }
+
+        function buildHazardCheckboxes() {
+            const caseName = document.getElementById('caseStudySelect').value;
+            const container = document.getElementById('checkboxContainer');
+            container.innerHTML = ""; // Clear old checkboxes
+
+            // Determine which taxonomy to use (UAV or Humanoid)
+            // Simple logic: check if the case name contains the keywords
+            let type = "UAV"; 
+            if (caseName.toLowerCase().includes("humanoid")) type = "Humanoid";
+
+            const currentTax = taxonomies[type];
+
+            Object.entries(currentTax).forEach(([code, label]) => {
+                const div = document.createElement('div');
+                div.innerHTML = `
+                    <input type="checkbox" id="${code}" name="hazard" value="${code}">
+                    <label for="${code}"><strong>${code}:</strong> ${label}</label>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function submitAndNext() {
+            const selectedRating = document.querySelector('input[name="safety"]:checked');
+            if (!selectedRating) {
+                alert("Please select a safety rating.");
+                return;
+            }
+
+            // Collect all checked hazards
+            const checkedHazards = Array.from(document.querySelectorAll('input[name="hazard"]:checked'))
+                                        .map(cb => cb.value);
+
+            if (selectedRating.value === 'unsafe' && checkedHazards.length === 0) {
+                alert("Please select at least one hazard category.");
+                return;
+            }
+
+            const caseName = document.getElementById('caseStudySelect').value;
+            const envName = document.getElementById('envSelect').value;
+            
+            // Save answer
+            sessionAnswers.push({
+                caseStudy: caseName,
+                environment: envName,
+                videoName: videoList[currentIndex].name,
+                safetyRating: selectedRating.value,
+                hazards: selectedRating.value === 'unsafe' ? checkedHazards : [],
+                timestamp: new Date().toISOString()
+            });
+
+            currentIndex++;
+            if (currentIndex < videoList.length) {
+                loadVideo();
+                toggleHazard(false);
+            } else {
+                downloadResults(caseName, envName);
             }
         }
 
@@ -123,34 +243,6 @@
             document.getElementById('safetyForm').reset();
         }
 
-        function submitAndNext() {
-            const selected = document.querySelector('input[name="safety"]:checked');
-            if (!selected) {
-                alert("Please select a safety rating.");
-                return;
-            }
-
-            // Save current answer
-            const caseName = document.getElementById('caseStudySelect').value;
-            const envName = document.getElementById('envSelect').value;
-            
-            sessionAnswers.push({
-                caseStudy: caseName,
-                environment: envName,
-                videoName: videoList[currentIndex].name,
-                safetyRating: selected.value,
-                timestamp: new Date().toISOString()
-            });
-
-            currentIndex++;
-
-            if (currentIndex < videoList.length) {
-                loadVideo();
-            } else {
-                downloadResults(caseName, envName);
-            }
-        }
-
         function downloadResults(caseName, envName) {
             // Create the JSON file
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(sessionAnswers, null, 4));
@@ -168,6 +260,30 @@
 
             alert("Assessment Complete! Your results file has been downloaded.");
             document.getElementById('assessmentArea').classList.add('hidden');
+        }
+        function buildHazardCheckboxes() {
+            const caseName = document.getElementById('caseStudySelect').value;
+            const container = document.getElementById('checkboxContainer');
+            container.innerHTML = ""; 
+        
+            let type = "UAV"; 
+            if (caseName.toLowerCase().includes("humanoid")) type = "Humanoid";
+        
+            const currentTax = taxonomies[type];
+        
+            Object.entries(currentTax).forEach(([code, info]) => {
+                const div = document.createElement('div');
+                div.className = "hazard-item";
+                
+                div.innerHTML = `
+                    <input type="checkbox" id="${code}" name="hazard" value="${code}">
+                    <label for="${code}" class="hazard-label">
+                        <strong>${code}:</strong> ${info.title}
+                        <span class="tooltip-text">${info.description}</span>
+                    </label>
+                `;
+                container.appendChild(div);
+            });
         }
 
         init();
