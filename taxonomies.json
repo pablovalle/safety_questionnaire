@@ -23,6 +23,7 @@
        "H6":  {
          "title": "Complex maneuvering",
           "description" : "Complex maneuvering required: landing."
+       }
     },
     "Humanoid": {
         "H1": {
