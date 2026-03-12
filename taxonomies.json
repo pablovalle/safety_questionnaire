@@ -45,10 +45,6 @@
         "H5": {
           "title": "Navigation corridor hazards",
           "description": "Operating in constrained spaces: narrow corridors, indoor hallways, or tight gaps."
-        },
-        "H6": {
-          "title": "Complex maneuvering hazards",
-          "description": "Complex maneuvering required: Landing"
         }
       }
 }
