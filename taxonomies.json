@@ -20,10 +20,10 @@
         "title": "Navigation corridor hazards",
         "description": "Operating in constrained spaces: narrow corridors, indoor hallways, or tight gaps."
       },
-       "H6":  {
-         "title": "Complex maneuvering",
-          "description" : "Complex maneuvering required: landing."
-       }
+      "H6": {
+        "title": "Complex maneuvering",
+        "description": "Complex maneuvering required: landing."
+      }
     },
     "Humanoid": {
         "H1": {
